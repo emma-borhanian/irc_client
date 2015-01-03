@@ -56,7 +56,7 @@ SCRIPT
 
   ssh -a "$SERVER_USER@$HOST" <<-"SCRIPT"
     apt-get update
-    apt-get install -y lxc-docker
+    apt-get install -y lxc-docker encfs
 
     if [[ "Status: inactive" == "$(sudo ufw status | head -n1)" ]]; then
       echo "enabling firewall..."
@@ -74,13 +74,18 @@ SCRIPT
   done
 fi
 
-LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" ssh -a -o SendEnv=LC_HOST,LC_WEECHAT_PASSWORD "$SERVER_USER@$HOST" <<-"SCRIPT"
+LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="$ENCRYPTION_PASSWORD" ssh -a -o SendEnv=LC_HOST,LC_WEECHAT_PASSWORD,LC_ENCRYPTION_PASSWORD "$SERVER_USER@$HOST" <<-"SCRIPT"
   set -e
   HOST=$LC_HOST
   WEECHAT_PASSWORD=$LC_WEECHAT_PASSWORD
+  ENCRYPTION_PASSWORD=$LC_ENCRYPTION_PASSWORD
 
   if [[ ! "$WEECHAT_PASSWORD" ]]; then
     echo "must set a password for weechat!"
+    exit 1
+  fi
+  if [[ ! "$ENCRYPTION_PASSWORD" ]]; then
+    echo "must set ENCRYPTION_PASSWORD!"
     exit 1
   fi
 
@@ -107,8 +112,13 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" ssh -a -o SendEnv=LC_HOS
     docker rm $STOPPED &> /dev/null
   fi
 
+  echo "setting up encryption..."
+  mkdir -p ~/.weechat/logs ~/.weechat/encrypted_logs
+  fusermount -u ~/.weechat/logs || true
+  echo "$ENCRYPTION_PASSWORD\n$ENCRYPTION_PASSWORD\n" | encfs --standard -S ~/.weechat/encrypted_logs ~/.weechat/logs
+
   echo "starting weechat..."
-  STARTED=$(docker run --name weechat --restart always -e "WEECHAT_PASSWORD=$WEECHAT_PASSWORD" -p $HOST:8001:8001 -i -t -d local/weechat)
+  STARTED=$(docker run --name weechat --restart always -v "$HOME/.weechat/logs:/.weechat/logs" -e "WEECHAT_PASSWORD=$WEECHAT_PASSWORD" -p $HOST:8001:8001 -i -t -d local/weechat)
 
   if [[ $STARTED ]]; then
     echo "started weechat as $STARTED"

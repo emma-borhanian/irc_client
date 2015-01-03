@@ -12,5 +12,6 @@ EXPOSE 8001
 
 ENV LANG en_US.UTF-8
 ENV TERM screen-256color
+ENV HOME /
 
-CMD weechat -r "/set relay.network.password \"$WEECHAT_PASSWORD\";/relay add weechat 8001"
+CMD weechat -r "/set relay.network.password \"$WEECHAT_PASSWORD\";/set logger.file.mask \"\$plugin.\$name.log\";/relay add weechat 8001"
