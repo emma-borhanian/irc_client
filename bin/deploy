@@ -1,0 +1,120 @@
+#!/bin/bash
+set -e
+
+HELP=<<HELP
+usage: deploy [-f]
+Deploys to irc client server
+Options:
+  -f fast run: disables server update
+  -h displays this help
+HELP
+
+FAST=false
+
+options='hf'
+while getopts $options option; do
+  case $option in
+    h  ) echo "$help"; exit 0;;
+    f  ) FAST=true;;
+    \? ) # unrecognized option - show help
+        echo \\n"Unrecognized option -${BOLD}$OPTARG${NORM}"
+        echo "$HELP"
+        exit 0
+        ;;
+  esac
+done
+
+BASEDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$BASEDIR/.."
+
+if [[ -f .env ]]; then
+  source .env
+fi
+
+SERVER_USER="$(if [[ "$SERVER_USER" ]]; then echo "$SERVER_USER"; else echo "$USER"; fi)"
+
+if [ "$(git branch | grep '*')" != "* master" ] ; then
+  read -p 'You are not on master, are you sure you want to deploy? (y/n) ' -r REPLY
+  if [ ! $REPLY = 'y' ]; then
+    exit 1
+  fi
+fi
+
+rsync -R `git ls-files` "$SERVER_USER@$HOST":deploy
+
+if [ "$FAST" != true ]; then
+  ssh -a "$SERVER_USER@$HOST" <<-"SCRIPT"
+    set -e
+
+    $(yes | do-release-upgrade) || true
+SCRIPT
+
+  while ! nc -z $HOST 22; do
+    sleep 1
+    echo "waiting for server to reboot..."
+  done
+
+  ssh -a "$SERVER_USER@$HOST" <<-"SCRIPT"
+    apt-get update
+    apt-get install -y lxc-docker
+
+    if [[ "Status: inactive" == "$(sudo ufw status | head -n1)" ]]; then
+      echo "enabling firewall..."
+      echo y | sudo ufw reset &> /dev/null
+      echo y | sudo ufw enable
+      sudo ufw logging off
+      sudo ufw allow 22
+      reboot
+    fi
+SCRIPT
+
+  while ! nc -z $HOST 22; do
+    sleep 1
+    echo "waiting for server to reboot..."
+  done
+fi
+
+LC_HOST=$HOST ssh -a -o SendEnv=LC_HOST "$SERVER_USER@$HOST" <<-"SCRIPT"
+  set -e
+  HOST=$LC_HOST
+
+  echo "configuring firewall..."
+  echo y | sudo ufw reset &> /dev/null
+  echo y | sudo ufw enable
+  sudo ufw logging off
+  sudo ufw allow 22
+  sudo ufw allow 8001
+
+  cd deploy/docker-weechat
+  docker build -t local/weechat .
+
+  # stop running containers
+  if [[ $(echo $(docker ps) | grep "\sweechat\$") ]]; then
+    echo "stopping container weechat"
+    docker stop weechat &> /dev/null
+  fi
+
+  # remove stopped containers
+  STOPPED=$(docker ps -a -q -f status=exited)
+  if [[ "$STOPPED" ]]; then
+    echo "removing stopped containers $(echo -n $STOPPED  | tr "\\n" ",")"
+    docker rm $STOPPED &> /dev/null
+  fi
+
+  echo "starting weechat..."
+  STARTED=$(docker run --name weechat --restart always -p $HOST:8001:8001 -i -t -d local/weechat)
+
+  if [[ $STARTED ]]; then
+    echo "started weechat as $STARTED"
+  else
+    echo "failed to start weechat"
+    exit 1
+  fi
+
+  # remove dangling images
+  DANGLING=$(docker images -q -f dangling=true)
+  if [[ "$DANGLING" ]]; then
+    echo "removing dangling images $(echo -n $DANGLING | tr "\\n" ",")"
+    docker rmi $DANGLING &> /dev/null
+  fi
+SCRIPT
