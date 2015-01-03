@@ -74,9 +74,15 @@ SCRIPT
   done
 fi
 
-LC_HOST=$HOST ssh -a -o SendEnv=LC_HOST "$SERVER_USER@$HOST" <<-"SCRIPT"
+LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" ssh -a -o SendEnv=LC_HOST,LC_WEECHAT_PASSWORD "$SERVER_USER@$HOST" <<-"SCRIPT"
   set -e
   HOST=$LC_HOST
+  WEECHAT_PASSWORD=$LC_WEECHAT_PASSWORD
+
+  if [[ ! "$WEECHAT_PASSWORD" ]]; then
+    echo "must set a password for weechat!"
+    exit 1
+  fi
 
   echo "configuring firewall..."
   echo y | sudo ufw reset &> /dev/null
@@ -102,7 +108,7 @@ LC_HOST=$HOST ssh -a -o SendEnv=LC_HOST "$SERVER_USER@$HOST" <<-"SCRIPT"
   fi
 
   echo "starting weechat..."
-  STARTED=$(docker run --name weechat --restart always -p $HOST:8001:8001 -i -t -d local/weechat)
+  STARTED=$(docker run --name weechat --restart always -e "WEECHAT_PASSWORD=$WEECHAT_PASSWORD" -p $HOST:8001:8001 -i -t -d local/weechat)
 
   if [[ $STARTED ]]; then
     echo "started weechat as $STARTED"
