@@ -100,7 +100,7 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
   docker build -t local/weechat .
 
   # stop running containers
-  if [[ $(echo $(docker ps) | grep "\sweechat\$") ]]; then
+  if [[ "$(docker ps -a | grep weechat)" ]]; then
     echo "stopping container weechat"
     docker stop weechat &> /dev/null
   fi
