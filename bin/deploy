@@ -106,7 +106,7 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
   fi
 
   # remove stopped containers
-  STOPPED=$(docker ps -a -q -f status=exited)
+  STOPPED=$(docker ps -a -q status=exited)
   if [[ "$STOPPED" ]]; then
     echo "removing stopped containers $(echo -n $STOPPED  | tr "\\n" ",")"
     docker rm $STOPPED &> /dev/null
