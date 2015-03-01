@@ -56,7 +56,7 @@ SCRIPT
 
   ssh -a "$SERVER_USER@$HOST" <<-"SCRIPT"
     apt-get update
-    apt-get install -y lxc-docker encfs
+    apt-get install -y docker.io encfs
 
     if [[ "Status: inactive" == "$(sudo ufw status | head -n1)" ]]; then
       echo "enabling firewall..."
