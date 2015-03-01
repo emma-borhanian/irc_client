@@ -113,12 +113,12 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
   fi
 
   echo "setting up encryption..."
-  mkdir -p ~/.weechat/logs ~/.weechat/encrypted_logs
-  fusermount -u ~/.weechat/logs || true
-  echo "$ENCRYPTION_PASSWORD\n$ENCRYPTION_PASSWORD\n" | encfs --standard -S ~/.weechat/encrypted_logs ~/.weechat/logs
+  mkdir -p ~/.weechat ~/.encrypted_weechat
+  fusermount -u ~/.weechat || true
+  echo "$ENCRYPTION_PASSWORD\n$ENCRYPTION_PASSWORD\n" | encfs --standard -S ~/.encrypted_weechat ~/.weechat
 
   echo "starting weechat..."
-  STARTED=$(docker run --name weechat -v "$HOME/.weechat/logs:/.weechat/logs" -e "WEECHAT_PASSWORD=$WEECHAT_PASSWORD" -p $HOST:8001:8001 -i -t -d local/weechat)
+  STARTED=$(docker run --name weechat -v "$HOME/.weechat:/.weechat" -e "WEECHAT_PASSWORD=$WEECHAT_PASSWORD" -p $HOST:8001:8001 -i -t -d local/weechat)
 
   if [[ $STARTED ]]; then
     echo "started weechat as $STARTED"
