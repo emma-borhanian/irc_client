@@ -6,7 +6,7 @@ FROM debian:sid
 MAINTAINER Emma Borhanian emma.borhanian+docker-weechat@gmail.com
 
 RUN apt-get update && \
-    apt-get install -y weechat
+    apt-get install -y weechat perl
 
 EXPOSE 8001
 
