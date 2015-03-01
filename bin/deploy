@@ -105,6 +105,13 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
     docker stop weechat &> /dev/null
   fi
 
+  # remove stopped containers
+  STOPPED=$(docker ps -a -q -f status=exited)
+  if [[ "$STOPPED" ]]; then
+    echo "removing stopped containers $(echo -n $STOPPED  | tr "\\n" ",")"
+    docker rm $STOPPED &> /dev/null
+  fi
+
   echo "setting up encryption..."
   mkdir -p ~/.weechat/logs ~/.weechat/encrypted_logs
   fusermount -u ~/.weechat/logs || true
@@ -118,5 +125,12 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
   else
     echo "failed to start weechat"
     exit 1
+  fi
+
+  # remove dangling images
+  DANGLING=$(docker images -q -f dangling=true)
+  if [[ "$DANGLING" ]]; then
+    echo "removing dangling images $(echo -n $DANGLING | tr "\\n" ",")"
+    docker rmi $DANGLING &> /dev/null
   fi
 SCRIPT
