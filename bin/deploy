@@ -56,6 +56,7 @@ SCRIPT
 
   ssh -a "$SERVER_USER@$HOST" <<-"SCRIPT"
     apt-get update
+    apt-get upgrade -y
     apt-get autoremove -y
     apt-get install -y docker.io encfs
 
