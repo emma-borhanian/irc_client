@@ -98,8 +98,7 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
   sudo ufw allow 22
   sudo ufw allow 8001
 
-  cd deploy/docker-weechat
-  docker build -t local/weechat .
+  docker build -t local/weechat ~/deploy/docker-weechat
 
   # stop running containers
   if [[ "$(docker ps -a | grep weechat)" ]]; then
