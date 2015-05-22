@@ -55,10 +55,14 @@ SCRIPT
   done
 
   ssh -a "$SERVER_USER@$HOST" <<-"SCRIPT"
+    # http://askubuntu.com/a/473720
+    wget -qO- https://get.docker.io/gpg | sudo apt-key add -
+    sudo sh -c "echo deb http://get.docker.io/ubuntu docker main > /etc/apt/sources.list.d/docker.list"
+
     apt-get update
     apt-get upgrade -y
     apt-get autoremove -y
-    apt-get install -y docker.io encfs
+    apt-get install -y lxc-docker encfs
 
     if [[ "Status: inactive" == "$(sudo ufw status | head -n1)" ]]; then
       echo "enabling firewall..."
@@ -116,7 +120,7 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
   fi
 
   # remove stopped containers
-  STOPPED=$(docker ps -a -q status=exited)
+  STOPPED=$(docker ps -a -q -f status=exited)
   if [[ "$STOPPED" ]]; then
     echo "removing stopped containers $(echo -n $STOPPED  | tr "\\n" ",")"
     docker rm $STOPPED &> /dev/null
@@ -128,7 +132,7 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
   echo "$ENCRYPTION_PASSWORD\n$ENCRYPTION_PASSWORD\n" | encfs --standard -S ~/.encrypted_weechat ~/.weechat
 
   echo "starting weechat..."
-  STARTED=$(docker run --name weechat -v "$HOME/.weechat:/.weechat" -e "WEECHAT_PASSWORD=$WEECHAT_PASSWORD" -p localhost:8001:8001 -i -t -d local/weechat)
+  STARTED=$(docker run --name weechat -v "$HOME/.weechat:/.weechat" -e "WEECHAT_PASSWORD=$WEECHAT_PASSWORD" -p 127.0.0.1:8001:8001 -i -t -d local/weechat)
 
   if [[ $STARTED ]]; then
     echo "started weechat as $STARTED"
