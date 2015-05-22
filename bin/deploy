@@ -84,11 +84,11 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
   GUEST_USER_AUTHORIZED_KEYS="$LC_GUEST_USER_AUTHORIZED_KEYS"
 
   if [[ ! "$WEECHAT_PASSWORD" ]]; then
-    echo "must set a password for weechat!"
+    echo "must set a password for weechat!" >&2
     exit 1
   fi
   if [[ ! "$ENCRYPTION_PASSWORD" ]]; then
-    echo "must set ENCRYPTION_PASSWORD!"
+    echo "must set ENCRYPTION_PASSWORD!" >&2
     exit 1
   fi
 
@@ -133,7 +133,7 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
   if [[ $STARTED ]]; then
     echo "started weechat as $STARTED"
   else
-    echo "failed to start weechat"
+    echo "failed to start weechat" >&2
     exit 1
   fi
 
