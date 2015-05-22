@@ -76,11 +76,12 @@ SCRIPT
   done
 fi
 
-LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="$ENCRYPTION_PASSWORD" ssh -a -o SendEnv=LC_HOST,LC_WEECHAT_PASSWORD,LC_ENCRYPTION_PASSWORD "$SERVER_USER@$HOST" <<-"SCRIPT"
+LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="$ENCRYPTION_PASSWORD" LC_GUEST_USER_AUTHORIZED_KEYS="$GUEST_USER_AUTHORIZED_KEYS" ssh -a -o SendEnv=LC_HOST,LC_WEECHAT_PASSWORD,LC_ENCRYPTION_PASSWORD,LC_GUEST_USER_AUTHORIZED_KEYS "$SERVER_USER@$HOST" <<-"SCRIPT"
   set -e
   HOST=$LC_HOST
   WEECHAT_PASSWORD="$LC_WEECHAT_PASSWORD"
   ENCRYPTION_PASSWORD="$LC_ENCRYPTION_PASSWORD"
+  GUEST_USER_AUTHORIZED_KEYS="$LC_GUEST_USER_AUTHORIZED_KEYS"
 
   if [[ ! "$WEECHAT_PASSWORD" ]]; then
     echo "must set a password for weechat!"
@@ -96,6 +97,15 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
   echo y | sudo ufw enable
   sudo ufw logging off
   sudo ufw allow 22
+
+  if [[ "$GUEST_USER_AUTHORIZED_KEYS" ]]; then
+    echo "creating guest user"
+    id -u guest &>/dev/null || useradd guest
+    mkdir -p ~guest/.ssh
+    echo "$GUEST_USER_AUTHORIZED_KEYS" > ~guest/.ssh/authorized_keys
+  else
+    echo "\$GUEST_USER_AUTHORIZED_KEYS not set" >&2
+  fi
 
   docker build -t local/weechat ~/deploy/docker-weechat
 
