@@ -46,7 +46,7 @@ if [ "$FAST" != true ]; then
   ssh -a "$SERVER_USER@$HOST" <<-"SCRIPT"
     set -e
 
-    $(yes | do-release-upgrade) || true
+    yes | do-release-upgrade || true
 SCRIPT
 
   while ! nc -z $HOST 22; do
