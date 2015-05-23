@@ -53,7 +53,7 @@ fi
 
 SERVER_USER="$(if [[ "$SERVER_USER" ]]; then echo "$SERVER_USER"; else echo "$USER"; fi)"
 
-if [ "$(git branch | grep '*')" != "* master" ] ; then
+if [[ "$(git branch | grep '*')" != "* master" ]] ; then
   read -p 'You are not on master, are you sure you want to deploy? (y/n) ' -r REPLY
   if [ ! $REPLY = 'y' ]; then
     exit 1
@@ -117,7 +117,7 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_ENCRYPTION_PASSWORD="$ENCRYPTION_PASS
   docker build -t local/weechat ~/deploy/docker-weechat
 
   # stop running containers
-  if [[ "$(docker ps -a | grep weechat)" ]]; then
+  if docker ps -a | grep weechat; then
     echo "stopping container weechat"
     docker stop weechat &> /dev/null
   fi
