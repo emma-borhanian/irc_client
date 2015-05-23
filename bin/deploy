@@ -102,9 +102,6 @@ fi
 
 LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_ENCRYPTION_PASSWORD="$ENCRYPTION_PASSWORD" LC_GUEST_USER_AUTHORIZED_KEYS="$GUEST_USER_AUTHORIZED_KEYS" ssh -a -o SendEnv=LC_WEECHAT_PASSWORD,LC_ENCRYPTION_PASSWORD,LC_GUEST_USER_AUTHORIZED_KEYS "$SERVER_USER@$HOST" <<-"SCRIPT"
   set -e
-  WEECHAT_PASSWORD="$LC_WEECHAT_PASSWORD"
-  ENCRYPTION_PASSWORD="$LC_ENCRYPTION_PASSWORD"
-  GUEST_USER_AUTHORIZED_KEYS="$LC_GUEST_USER_AUTHORIZED_KEYS"
 
   echo "configuring firewall..."
   echo y | sudo ufw reset &> /dev/null
@@ -115,7 +112,7 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_ENCRYPTION_PASSWORD="$ENCRYPTION_PASS
   echo "creating guest user"
   id -u guest &>/dev/null || useradd guest
   mkdir -p ~guest/.ssh
-  echo "$GUEST_USER_AUTHORIZED_KEYS" > ~guest/.ssh/authorized_keys
+  echo "$LC_GUEST_USER_AUTHORIZED_KEYS" > ~guest/.ssh/authorized_keys
 
   docker build -t local/weechat ~/deploy/docker-weechat
 
@@ -135,10 +132,10 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_ENCRYPTION_PASSWORD="$ENCRYPTION_PASS
   echo "setting up encryption..."
   mkdir -p ~/.weechat ~/.encrypted_weechat
   fusermount -u ~/.weechat || true
-  echo "$ENCRYPTION_PASSWORD\n$ENCRYPTION_PASSWORD\n" | encfs --standard -S ~/.encrypted_weechat ~/.weechat
+  echo "$LC_ENCRYPTION_PASSWORD\n$LC_ENCRYPTION_PASSWORD\n" | encfs --standard -S ~/.encrypted_weechat ~/.weechat
 
   echo "starting weechat..."
-  STARTED=$(docker run --name weechat -v "$HOME/.weechat:/.weechat" -e "WEECHAT_PASSWORD=$WEECHAT_PASSWORD" -p 127.0.0.1:8001:8001 -i -t -d local/weechat)
+  STARTED=$(docker run --name weechat -v "$HOME/.weechat:/.weechat" -e "WEECHAT_PASSWORD=$LC_WEECHAT_PASSWORD" -p 127.0.0.1:8001:8001 -i -t -d local/weechat)
 
   if [[ $STARTED ]]; then
     echo "started weechat as $STARTED"
