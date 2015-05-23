@@ -31,6 +31,26 @@ if [[ -f .env ]]; then
   source .env
 fi
 
+if [[ ! "$HOST" ]]; then
+  echo "missing \$HOST" >&2
+  exit 1
+fi
+
+if [[ ! "$WEECHAT_PASSWORD" ]]; then
+  echo "missing \$WEECHAT_PASSWORD" >&2
+  exit 1
+fi
+
+if [[ ! "$ENCRYPTION_PASSWORD" ]]; then
+  echo "missing \$ENCRYPTION_PASSWORD" >&2
+  exit 1
+fi
+
+if [[ ! "$GUEST_USER_AUTHORIZED_KEYS" ]]; then
+  echo "missing \$GUEST_USER_AUTHORIZED_KEYS" >&2
+  exit 1
+fi
+
 SERVER_USER="$(if [[ "$SERVER_USER" ]]; then echo "$SERVER_USER"; else echo "$USER"; fi)"
 
 if [ "$(git branch | grep '*')" != "* master" ] ; then
@@ -87,29 +107,16 @@ LC_WEECHAT_PASSWORD="$WEECHAT_PASSWORD" LC_HOST="$HOST" LC_ENCRYPTION_PASSWORD="
   ENCRYPTION_PASSWORD="$LC_ENCRYPTION_PASSWORD"
   GUEST_USER_AUTHORIZED_KEYS="$LC_GUEST_USER_AUTHORIZED_KEYS"
 
-  if [[ ! "$WEECHAT_PASSWORD" ]]; then
-    echo "must set a password for weechat!" >&2
-    exit 1
-  fi
-  if [[ ! "$ENCRYPTION_PASSWORD" ]]; then
-    echo "must set ENCRYPTION_PASSWORD!" >&2
-    exit 1
-  fi
-
   echo "configuring firewall..."
   echo y | sudo ufw reset &> /dev/null
   echo y | sudo ufw enable
   sudo ufw logging off
   sudo ufw allow 22
 
-  if [[ "$GUEST_USER_AUTHORIZED_KEYS" ]]; then
-    echo "creating guest user"
-    id -u guest &>/dev/null || useradd guest
-    mkdir -p ~guest/.ssh
-    echo "$GUEST_USER_AUTHORIZED_KEYS" > ~guest/.ssh/authorized_keys
-  else
-    echo "\$GUEST_USER_AUTHORIZED_KEYS not set" >&2
-  fi
+  echo "creating guest user"
+  id -u guest &>/dev/null || useradd guest
+  mkdir -p ~guest/.ssh
+  echo "$GUEST_USER_AUTHORIZED_KEYS" > ~guest/.ssh/authorized_keys
 
   docker build -t local/weechat ~/deploy/docker-weechat
 

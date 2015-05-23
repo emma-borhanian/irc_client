@@ -10,4 +10,9 @@ fi
 
 SERVER_USER="$(if [[ "$SERVER_USER" ]]; then echo "$SERVER_USER"; else echo "$USER"; fi)"
 
+if [[ ! "$HOST" ]]; then
+  echo "missing \$HOST" >&2
+  exit 1
+fi
+
 ssh "$SERVER_USER@$HOST" "$@"
