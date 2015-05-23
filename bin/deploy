@@ -60,7 +60,7 @@ if [[ "$(git branch | grep '*')" != "* master" ]] ; then
   fi
 fi
 
-rsync -R `git ls-files` "$SERVER_USER@$HOST":deploy
+rsync -R `git ls-files upload` "$SERVER_USER@$HOST":deploy
 
 if [ "$FAST" != true ]; then
   ssh -a "$SERVER_USER@$HOST" <<-"SCRIPT"
