@@ -60,6 +60,7 @@ if [[ "$(git branch | grep '*')" != "* master" ]] ; then
   fi
 fi
 
+ssh "$SERVER_USER@$HOST" mkdir -p \"\$HOME/deploy\"
 cd upload
 rsync -R `git ls-files .` "$SERVER_USER@$HOST":deploy
 cd ..
