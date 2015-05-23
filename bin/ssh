@@ -10,6 +10,4 @@ fi
 
 SERVER_USER="$(if [[ "$SERVER_USER" ]]; then echo "$SERVER_USER"; else echo "$USER"; fi)"
 
-ssh "$SERVER_USER@$HOST"
-
-
+ssh "$SERVER_USER@$HOST" "$@"
