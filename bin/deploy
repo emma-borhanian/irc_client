@@ -70,7 +70,7 @@ function waitForServer
 
 ssh "$SERVER_USER@$HOST" mkdir -p \"\$HOME/deploy\"
 cd upload
-rsync -R `git ls-files .` "$SERVER_USER@$HOST":deploy
+rsync -R "$(git ls-files .)" "$SERVER_USER@$HOST":deploy
 cd ..
 
 if [ "$FAST" != true ]; then
